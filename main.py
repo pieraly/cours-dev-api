@@ -2,7 +2,50 @@ from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+# description
+api_description = description = """
+Watch API heps you do awesome stuff
+
+## Jerseys
+You will be able to:
+
+* Create new jersey
+* Get jerseys list
+* Update jersey
+* Delete jersey
+
+## Users
+You will be able to :
+
+* Create new user
+* Get users list
+* Update user
+* Delete user
+
+"""
+
+# liste des tags utilises dans la doc
+tags_metadata = [
+    {
+        "name": "Users",
+        "description": "manage Users. "
+    },
+    {
+        "name": "Jerseys",
+        "description": "manages Jerseys",
+        "externaldocs": {
+            
+        }
+        
+    }
+    
+]
+
+app = FastAPI( title= "Jersey API",
+    description=api_description,
+    openapi_tags=tags_metadata # tagsmetadata est definit au dessus 
+)
+
 
 # classe jersey
 class Jersey(BaseModel):
@@ -34,7 +77,7 @@ userList = [
 
  # Récupère la liste de tous les maillots 
 
-@app.get("/jerseys")
+@app.get("/jerseys", tags= ["Jerseys"])
 async def get_jerseys(): 
     
     return {
@@ -47,7 +90,7 @@ async def get_jerseys():
 
 # Crée un nouveau maillot.
 
-@app.post("/jerseys")
+@app.post("/jerseys" , tags= ["Jerseys"])
 async def create_jersey(payload: Jersey, response: Response):
        
     jerseyList.append(payload.dict())
@@ -57,7 +100,7 @@ async def create_jersey(payload: Jersey, response: Response):
 
  # Récupère un maillot spécifique en fonction de son ID.
 
-@app.get("/jerseys/{jersey_id}")
+@app.get("/jerseys/{jersey_id}", tags= ["Jerseys"])
 async def get_jersey(jersey_id: int, response: Response):
         
     try:
@@ -72,7 +115,7 @@ async def get_jersey(jersey_id: int, response: Response):
 
 # Supprime un maillot spécifique en fonction de son ID
 
-@app.delete("/jerseys/{jersey_id}")
+@app.delete("/jerseys/{jersey_id}" , tags= ["Jerseys"])
 async def delete_jersey(jersey_id: int, response: Response):
     
     try:
@@ -87,7 +130,7 @@ async def delete_jersey(jersey_id: int, response: Response):
 
 # Remplace un maillot existant par un nouveau maillot
 
-@app.put("/jerseys/{jersey_id}")
+@app.put("/jerseys/{jersey_id}", tags= ["Jerseys"])
 async def replace_jersey(jersey_id: int, payload: Jersey, response: Response):
     
     try:
@@ -99,15 +142,15 @@ async def replace_jersey(jersey_id: int, payload: Jersey, response: Response):
             detail="Jersey not found"
         )
         
-        
+###################################################        
         
 # Récupère la liste de tous les utilisateurs
-@app.get("/users")
+@app.get("/users",  tags= ["Users"])
 async def get_users():
     return userList
 
 # Récupère un utilisateur spécifique en fonction de son ID
-@app.get("/users/{user_id}")
+@app.get("/users/{user_id}", tags= ["Users"])
 async def get_user(user_id: int, response: Response):
     try:
         corresponding_user = next(user for user in userList if user["user_id"] == user_id)
@@ -119,7 +162,7 @@ async def get_user(user_id: int, response: Response):
         )
 
 # Crée un nouvel utilisateur
-@app.post("/users")
+@app.post("/users" ,  tags= ["Users"])
 async def create_user(payload: User, response: Response):
     new_user = {
         "user_id": len(userList) + 1,
@@ -133,7 +176,7 @@ async def create_user(payload: User, response: Response):
 
 # Met à jour un utilisateur existant
 
-@app.put("/users/{user_id}")
+@app.put("/users/{user_id}",  tags= ["Users"])
 async def update_user(user_id: int, payload: User, response: Response):
     try:
         index = next(index for index, user in enumerate(userList) if user["user_id"] == user_id)
@@ -150,7 +193,7 @@ async def update_user(user_id: int, payload: User, response: Response):
 
 
 # Supprime un utilisateur spécifique en fonction de son ID
-@app.delete("/users/{user_id}")
+@app.delete("/users/{user_id}",  tags= ["Users"])
 async def delete_user(user_id: int, response: Response):
     try:
         index = next(index for index, user in enumerate(userList) if user["user_id"] == user_id)
