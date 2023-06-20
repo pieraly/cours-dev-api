@@ -2,12 +2,28 @@ from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 
+# import necessaire pour la connexion a la base de donnée
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+# connection DB
+connexion = psycopg2.connect(
+    host = "localhost",
+    database = "jerseys",
+    user = "postgres",
+    password = "root",
+    cursor_factory=RealDictCursor
+    
+)
+cursor =  connexion.cursor() #TODO a modifier
+
+
 # description
 api_description = description = """
 THis API is built with fatsAPI : 
 
 ## Jerseys
-You will be able to:
+    You will be able to :
 
 * Create new jersey
 * Get jerseys list
@@ -15,7 +31,7 @@ You will be able to:
 * Delete jersey
 
 ## Users
-You will be able to :
+    You will be able to :
 
 * Create new user
 * Get users list
@@ -51,7 +67,6 @@ app = FastAPI( title= "Jersey API",
 
 # jersey #
 class Jersey(BaseModel):
-    jersey_id: int
     name: str
     price: float
     tags: str
@@ -82,21 +97,25 @@ userList = [
 
 @app.get("/jerseys", tags= ["Jerseys"])
 async def get_jerseys(): 
-    
+    #requete sql
+    cursor.execute ("SELECT * FROM jersey")
+    dbJerseys = cursor.fetchall()
     return {
-        "jersey": jerseyList,
+        "jersey": dbJerseys,
         "limit": 10,
-        "total": len(jerseyList),  # Nombre total de maillots
+        "total": len(dbJerseys),  # Nombre total de maillots
         "skip": 0
     }
 
 
 # Crée un nouveau maillot.
+# insert into jersey values ()
 
 @app.post("/jerseys" , tags= ["Jerseys"])
 async def create_jersey(payload: Jersey, response: Response):
-       
-    jerseyList.append(payload.dict())
+    cursor.execute(f"INSERT INTO jersey (name, price, tags, stock, availability) VALUES ('{payload.name}',{payload.price}, '{payload.tags}',{payload.stock},'{payload.availability}') RETURNING *;")
+    connexion.commit()
+   
     response.status_code = status.HTTP_201_CREATED
     return {"message": f"New jersey added successfully: {payload.name}"}
 
@@ -107,8 +126,15 @@ async def create_jersey(payload: Jersey, response: Response):
 async def get_jersey(jersey_id: int, response: Response):
         
     try:
-        corresponding_jersey = jerseyList[jersey_id - 1]
-        return corresponding_jersey
+        cursor.execute(f"SELECT * FROM jersey WHERE jersey_id={jersey_id}")
+        corresponding_jersey = cursor.fetchone()
+        if (corresponding_jersey):
+            return corresponding_jersey 
+        else:
+            raise HTTPException (
+            status.HTTP_404_NOT_FOUND,
+            detail="Jersey not found")
+            
     except: 
         raise HTTPException (
             status.HTTP_404_NOT_FOUND,
