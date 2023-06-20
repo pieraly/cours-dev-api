@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 # description
 api_description = description = """
-Watch API heps you do awesome stuff
+THis API is built with fatsAPI : 
 
 ## Jerseys
 You will be able to:
@@ -28,11 +28,11 @@ You will be able to :
 tags_metadata = [
     {
         "name": "Users",
-        "description": "manage Users. "
+        "description": "manage Users "
     },
     {
         "name": "Jerseys",
-        "description": "manages Jerseys",
+        "description": "Find the jersey that you want ",
         "externaldocs": {
             
         }
@@ -47,7 +47,9 @@ app = FastAPI( title= "Jersey API",
 )
 
 
-# classe jersey
+#### classes  ####
+
+# jersey #
 class Jersey(BaseModel):
     jersey_id: int
     name: str
@@ -62,7 +64,7 @@ jerseyList = [
     {"jersey_id":3,"name": "mitroglou", "price": 50, "tags": "M9", "availability":1, "stock": 200}
 ]
 
-# class users
+# users #
 class User(BaseModel):
     name: str
     mdp: int
@@ -74,6 +76,7 @@ userList = [
     {"user_id": 3, "name": "Mondestin", "mdp": 333, "email": "mondestin@example.com"}
 ]
 
+#####    #######
 
  # Récupère la liste de tous les maillots 
 
