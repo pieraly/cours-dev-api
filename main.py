@@ -2,82 +2,64 @@ from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 
-# import necessaire pour la connexion a la base de donnée
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-# connection DB
+# Connexion à la base de données
 connexion = psycopg2.connect(
-    host = "localhost",
-    database = "jerseys",
-    user = "postgres",
-    password = "root",
+    host="dpg-ci8rmv18g3n3vm6clj9g-a.frankfurt-postgres.render.com",
+    database="jerseys",
+    user="steph_render",
+    password="ZIPWG5kTQqhuqrLWtZLQWAg08VLD2MHY",
     cursor_factory=RealDictCursor
-    
 )
-cursor =  connexion.cursor() #TODO a modifier
+cursor = connexion.cursor()
 
 
-# description
-api_description = description = """
-THis API is built with fatsAPI : 
+# Description
+api_description = """
+This API is built with FastAPI:
 
 ## Jerseys
-    You will be able to :
-
-* Create new jersey
-* Get jerseys list
-* Update jersey
-* Delete jersey
+You will be able to:
+* Create a new jersey
+* Get the list of jerseys
+* Update a jersey
+* Delete a jersey
 
 ## Users
-    You will be able to :
-
-* Create new user
-* Get users list
-* Update user
-* Delete user
-
+You will be able to:
+* Create a new user
+* Get the list of users
+* Update a user
+* Delete a user
 """
 
-# liste des tags utilises dans la doc
 tags_metadata = [
     {
         "name": "Users",
-        "description": "manage Users "
+        "description": "Manage Users"
     },
     {
         "name": "Jerseys",
-        "description": "Find the jersey that you want ",
-        "externaldocs": {
-            
-        }
-        
+        "description": "Find the jersey you want"
     }
-    
 ]
 
-app = FastAPI( title= "Jersey API",
+app = FastAPI(
+    title="Jersey API",
     description=api_description,
-    openapi_tags=tags_metadata # tagsmetadata est definit au dessus 
+    openapi_tags=tags_metadata
 )
 
 
-#### classes  ####
-
-# jersey #
+# Jersey
 class Jersey(BaseModel):
     name: str
     price: float
     tags: str
-    availability: bool = True 
-    stock: Optional[int] = None  # Stock est un champ optionnel
-
-jerseyList = [
-    {"jersey_id":1,"name": "vinicius", "price": 100 , "tags":"Jr7", "availability":1, "stock": 150 },
-    {"jersey_id":2,"name": "kaka", "price": 80, "tags": "kaka", "availability":0, "stock": 0},
-    {"jersey_id":3,"name": "mitroglou", "price": 50, "tags": "M9", "availability":1, "stock": 200}
-]
+    availability: bool = True
+    stock: Optional[int] = None
 
 # users #
 class User(BaseModel):
@@ -91,95 +73,102 @@ userList = [
     {"user_id": 3, "name": "Mondestin", "mdp": 333, "email": "mondestin@example.com"}
 ]
 
-#####    #######
 
- # Récupère la liste de tous les maillots 
-
-@app.get("/jerseys", tags= ["Jerseys"])
-async def get_jerseys(): 
-    #requete sql
-    cursor.execute ("SELECT * FROM jersey")
-    dbJerseys = cursor.fetchall()
+@app.get("/jerseys", tags=["Jerseys"])
+async def get_jerseys():
+    cursor.execute("SELECT * FROM jersey")
+    db_jerseys = cursor.fetchall()
     return {
-        "jersey": dbJerseys,
+        "jersey": db_jerseys,
         "limit": 10,
-        "total": len(dbJerseys),  # Nombre total de maillots
+        "total": len(db_jerseys),
         "skip": 0
     }
 
 
-# Crée un nouveau maillot.
-# insert into jersey values ()
-
-@app.post("/jerseys" , tags= ["Jerseys"])
+@app.post("/jerseys", tags=["Jerseys"])
 async def create_jersey(payload: Jersey, response: Response):
-    cursor.execute(f"INSERT INTO jersey (name, price, tags, stock, availability) VALUES ('{payload.name}',{payload.price}, '{payload.tags}',{payload.stock},'{payload.availability}') RETURNING *;")
+    cursor.execute(
+        "INSERT INTO jersey (name, price, tags, stock, availability) VALUES (%s,%s,%s,%s,%s) RETURNING *;",
+        (payload.name, payload.price, payload.tags, payload.stock, payload.availability)
+    )
     connexion.commit()
-   
     response.status_code = status.HTTP_201_CREATED
     return {"message": f"New jersey added successfully: {payload.name}"}
 
 
- # Récupère un maillot spécifique en fonction de son ID.
-
-@app.get("/jerseys/{jersey_id}", tags= ["Jerseys"])
+@app.get("/jerseys/{jersey_id}", tags=["Jerseys"])
 async def get_jersey(jersey_id: int, response: Response):
-        
     try:
         cursor.execute(f"SELECT * FROM jersey WHERE jersey_id={jersey_id}")
         corresponding_jersey = cursor.fetchone()
-        if (corresponding_jersey):
-            return corresponding_jersey 
+        if corresponding_jersey:
+            return corresponding_jersey
         else:
-            raise HTTPException (
-            status.HTTP_404_NOT_FOUND,
-            detail="Jersey not found")
-            
-    except: 
-        raise HTTPException (
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail="Jersey not found"
+            )
+    except:
+        raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail="Jersey not found"
         )
 
 
-# Supprime un maillot spécifique en fonction de son ID
-
-@app.delete("/jerseys/{jersey_id}" , tags= ["Jerseys"])
+@app.delete("/jerseys/{jersey_id}", tags=["Jerseys"])
 async def delete_jersey(jersey_id: int, response: Response):
-    
     try:
-        jerseyList.pop(jersey_id - 1)
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return
+        cursor.execute("DELETE FROM jersey WHERE jersey_id = %s", (jersey_id,))
+        connexion.commit()
+        response.status_code = status.HTTP_202_ACCEPTED
+        return  {"message": "Jersey deleted"}
     except:
-        raise HTTPException (
+        raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail="Jersey not found"
         )
 
-# Remplace un maillot existant par un nouveau maillot
 
-@app.put("/jerseys/{jersey_id}", tags= ["Jerseys"])
+
+@app.put("/jerseys/{jersey_id}", tags=["Jerseys"])
 async def replace_jersey(jersey_id: int, payload: Jersey, response: Response):
+    cursor.execute(f"SELECT * FROM jersey WHERE jersey_id={jersey_id}")
+    corresponding_jersey = cursor.fetchone()
+    
+    if corresponding_jersey is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail="ID not found"
+        )
     
     try:
-        corresponding_jersey = jerseyList[jersey_id - 1] = payload.dict()
-        return {"message": f"Jersey updated successfully: {payload.name}"}
-    except:
-        raise HTTPException (
-            status.HTTP_404_NOT_FOUND,
-            detail="Jersey not found"
+        cursor.execute(
+            "UPDATE jersey SET name = %s, price = %s, tags = %s, stock = %s, availability = %s WHERE jersey_id = %s",
+            (payload.name, payload.price, payload.tags, payload.stock, payload.availability, jersey_id)
         )
-        
-###################################################        
-        
-# Récupère la liste de tous les utilisateurs
-@app.get("/users",  tags= ["Users"])
+        connexion.commit()
+        return {"message": "Jersey updated"}
+    except:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update jersey"
+        )
+
+
+# User
+class User(BaseModel):
+    name: str
+    mdp: int
+    email: str
+
+
+@app.get("/users", tags=["Users"])
 async def get_users():
     return userList
 
-# Récupère un utilisateur spécifique en fonction de son ID
-@app.get("/users/{user_id}", tags= ["Users"])
+
+@app.get("/users/{user_id}", tags=["Users"])
 async def get_user(user_id: int, response: Response):
     try:
         corresponding_user = next(user for user in userList if user["user_id"] == user_id)
@@ -190,8 +179,8 @@ async def get_user(user_id: int, response: Response):
             detail="User not found"
         )
 
-# Crée un nouvel utilisateur
-@app.post("/users" ,  tags= ["Users"])
+
+@app.post("/users", tags=["Users"])
 async def create_user(payload: User, response: Response):
     new_user = {
         "user_id": len(userList) + 1,
@@ -203,9 +192,8 @@ async def create_user(payload: User, response: Response):
     response.status_code = status.HTTP_201_CREATED
     return {"message": f"New user added successfully: {payload.name}"}
 
-# Met à jour un utilisateur existant
 
-@app.put("/users/{user_id}",  tags= ["Users"])
+@app.put("/users/{user_id}", tags=["Users"])
 async def update_user(user_id: int, payload: User, response: Response):
     try:
         index = next(index for index, user in enumerate(userList) if user["user_id"] == user_id)
@@ -220,9 +208,7 @@ async def update_user(user_id: int, payload: User, response: Response):
         )
 
 
-
-# Supprime un utilisateur spécifique en fonction de son ID
-@app.delete("/users/{user_id}",  tags= ["Users"])
+@app.delete("/users/{user_id}", tags=["Users"])
 async def delete_user(user_id: int, response: Response):
     try:
         index = next(index for index, user in enumerate(userList) if user["user_id"] == user_id)
