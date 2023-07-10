@@ -30,10 +30,10 @@ async def auth_client(
              status_code=status.HTTP_404_NOT_FOUND,
              detail='wrong email'
          )
-    # Vérifie sur password hashé (Bad practice (normalement 404 dans les deux cas))
+    # Vérifie sur password hashé 
     valid_pwd = utilities.verify_password(
         payload.password,
-        corresponding_client.password
+        utilities.hash_password(payload.password)
      )
     if(not valid_pwd):
         raise HTTPException(
@@ -41,6 +41,6 @@ async def auth_client(
             detail='wrong password' 
         ) 
     # Génération du JWT
-    token = utilities.generate_token(corresponding_client.id)
+    token = utilities.generate_token(corresponding_client.client_id)
     print(token)
     return token
