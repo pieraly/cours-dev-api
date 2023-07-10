@@ -34,7 +34,7 @@ async def get_jersey(jersey_id:int, cursor:Session= Depends(get_cursor)):
     else:
         raise HTTPException (
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No corresponding product found with id : {jersey_id}"
+            detail=f"No corresponding jersey found with id : {jersey_id}"
         )
 
 # CREATE new jersey
@@ -57,7 +57,7 @@ async def delete_jersey(jersey_id:int, cursor:Session=Depends(get_cursor)):
     else: 
         raise HTTPException (
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Ne corresponding product with id: {jersey_id}'
+            detail=f'Ne corresponding jersey with id: {jersey_id}'
         )
         
 # Update one jersey 
@@ -73,5 +73,5 @@ async def update_product(jersey_id: int, payload:schemas_dto.Jersey_PATCH_Body, 
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'No corresponding product with id: {jersey_id}'
+            detail=f'No corresponding jersey with id: {jersey_id}'
         )

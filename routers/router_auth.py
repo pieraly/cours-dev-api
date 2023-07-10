@@ -28,7 +28,7 @@ async def auth_client(
     if(not corresponding_client):
          raise HTTPException(
              status_code=status.HTTP_404_NOT_FOUND,
-             detail='email not good'
+             detail='wrong email'
          )
     # Vérifie sur password hashé (Bad practice (normalement 404 dans les deux cas))
     valid_pwd = utilities.verify_password(
@@ -38,7 +38,7 @@ async def auth_client(
     if(not valid_pwd):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='password not good' 
+            detail='wrong password' 
         ) 
     # Génération du JWT
     token = utilities.generate_token(corresponding_client.id)
