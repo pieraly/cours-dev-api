@@ -6,5 +6,9 @@ tags_metadata = [
     {
         "name": "Jerseys",
         "description": "Find the jersey you want"
+    },
+    {
+        "name": "Orders",
+        "description": "Create and list client's orders"
     }
 ]

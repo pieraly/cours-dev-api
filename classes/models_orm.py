@@ -28,6 +28,7 @@ class Clients(Base):
     
 class Orders(Base):
     __tablename__="order"
+    
     id= Column(Integer, primary_key=True, nullable=False)
     client_id= Column(Integer, ForeignKey("client.client_id", ondelete="RESTRICT"), nullable=False) 
     jersey_id = Column(Integer, ForeignKey("jersey.jersey_id", ondelete="RESTRICT"), nullable=False) 
