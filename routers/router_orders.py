@@ -37,7 +37,7 @@ async def create_order(
     cursor: Session = Depends(get_cursor)
     ):
     decoded_client_id = utilities.decode_token(token)
-    new_order= models_orm.Oredrs(client_id=decoded_client_id, jersey_id=payload.jersey_id)
+    new_order= models_orm.Orders(client_id=decoded_client_id, jersey_id=payload.jersey_id)
     try : 
         cursor.add(new_order)
         cursor.commit()
