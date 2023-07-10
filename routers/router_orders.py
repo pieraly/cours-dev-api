@@ -10,13 +10,13 @@ from pydantic.typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth")
 
-
+# endpoint
 router= APIRouter(
     prefix="/orders",
     tags=["Orders"]
 )
 
-
+# get all orders
 @router.get('')
 async def list_orders(
     token: Annotated[str, Depends(oauth2_scheme)], 
@@ -29,6 +29,7 @@ async def list_orders(
 class order_post(BaseModel):
     jersey_id:int
 
+# create an order
 @router.post('', status_code=status.HTTP_201_CREATED)
 async def create_order(
     token: Annotated[str, Depends(oauth2_scheme)], 

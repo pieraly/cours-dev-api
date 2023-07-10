@@ -6,27 +6,31 @@ import utilities
 # Formulaire de lancement du OAuth /auth
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
+
+#endpoint
 router = APIRouter(
     prefix='/auth',
     tags=["Auth"]
 )
 
-
+#create authentification
 @router.post('', status_code=status.HTTP_201_CREATED)
 async def auth_client(
         payload : OAuth2PasswordRequestForm= Depends(), 
         cursor: Session= Depends(database.get_cursor)
     ):
     print(payload.__dict__)
-    # 1. Recup les crédentials (username car il provient du formulaire par default de FastAPI)
+    
+    # Recupère les crédentials
     corresponding_client = cursor.query(models_orm.Clients).filter(models_orm.Clients.email == payload.username).first()
-    # 2. Vérifier dans la DB si user exist
+    
+    # Vérifie dans la DB si client exist
     if(not corresponding_client):
          raise HTTPException(
              status_code=status.HTTP_404_NOT_FOUND,
              detail='email not good'
          )
-    # 3. Vérif sur passwork hashé (Bad practice (normalement 404 dans les deux cas))
+    # Vérifie sur password hashé (Bad practice (normalement 404 dans les deux cas))
     valid_pwd = utilities.verify_password(
         payload.password,
         corresponding_client.password
@@ -36,7 +40,7 @@ async def auth_client(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='password not good' 
         ) 
-    # 4. Génération du JWT
+    # Génération du JWT
     token = utilities.generate_token(corresponding_client.id)
     print(token)
     return token
