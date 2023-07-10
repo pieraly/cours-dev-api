@@ -1,15 +1,26 @@
 from fastapi import FastAPI
-from classes.database import Base, engine
-from routers import jerseys, users, transactions
+from classes.database import database_engine
 
-app = FastAPI()
+import classes.models_orm
+import routers.router_jerseys, routers.router_client, routers.router_auth, routers.router_transactions
 
-# Effectue les opérations de migration de la base de données
-Base.metadata.create_all(bind=engine)
+from documentation.description import api_description
+from documentation.tags import tags_metadata
 
-app.include_router(jerseys.router)
-app.include_router(users.router)
-app.include_router(transactions.router)
+app= FastAPI( 
+    title="Jerseys API",
+    description=api_description,
+    openapi_tags=tags_metadata 
+    )
+
+
+classes.models_orm.Base.metadata.create_all(bind=database_engine)
+
+app.include_router(routers.router_jerseys.router)
+app.include_router(routers.router_client.router)
+app.include_router(routers.router_transactions.router)
+app.include_router(routers.router_auth.router)
+
 
 @app.get("/")
 async def root():

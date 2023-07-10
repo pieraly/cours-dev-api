@@ -1,23 +1,37 @@
 from pydantic import BaseModel
+from datetime import datetime
 
-# Schéma DTO pour les maillots
-class JerseySchema(BaseModel):
+
+
+class Jersey_POST_Body (BaseModel):
+    name: str
+    price: float
+    tags: str
+    stock: int
+    availability: bool
+    
+class Jersey_PATCH_Body (BaseModel):
+    newstock: int
+class Jersey_GETID_Response(BaseModel):
     name: str
     price: float
     tags: str
     availability: bool = True
     stock: int = None
+    class Config :
+        orm_mode = True
 
-# Schéma DTO pour les utilisateurs
-class UserSchema(BaseModel):
-    name: str
-    mdp: int
-    email: str
+class Client_POST_Body (BaseModel):
+    clientEmail:str
+    clientPassword: str
 
-# Schéma DTO pour les transactions
-class TransactionSchema(BaseModel):
-    user_id: int
-    jersey_id: int
-    timestamp: str
-    quantity: int
-    total_amount: float
+class Client_response (BaseModel): 
+    client_id: int
+    email:str
+    
+    
+    class Config:
+        orm_mode= True      
+        
+
+
